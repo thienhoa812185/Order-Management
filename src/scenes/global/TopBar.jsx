@@ -16,22 +16,29 @@ import Stomp from 'stompjs';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import PopupNotification from "./PopupNotification";
+import { useDispatch } from "react-redux";
+import  notificationSlice  from "../../redux/notificationSlice";
+import { v4 as uuidv4 } from 'uuid';
+
 const Topbar = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const colorMode = useContext(ColorModeContext);
   const notificationAmount = localStorage.getItem('notificationAmount') ? localStorage.getItem('notificationAmount') : 1
-  
+
+  // Menu notification
   const [anchorEl, setAnchorEl] = useState(null);
   const [open, setOpen] = useState(false);
   const handleOpen = (event) => {
-    setAnchorEl(event.currentTarget); 
+    setAnchorEl(event.currentTarget);
     setOpen(true)
   };
   const handleClose = () => {
     setOpen(false)
   };
-   
+
+  // Notification
+  const dispatch = useDispatch();
 
   const [openAlert, setOpenAlert] = useState(false);
   const [notificationData, setNotificationData] = useState(null)
@@ -39,8 +46,19 @@ const Topbar = () => {
     setOpenAlert(false)
   };
 
+  const incrementNotification = (notification) => {
+    dispatch(
+      notificationSlice.action.addNotification({
+        id: uuidv4(), 
+        type: notification.type,
+        content: notification.content,
+        route: notification.route
+      })
+    );
+  };
+
   useEffect(() => {
-    const socket = new SockJS('http://localhost:8080/ws'); 
+    const socket = new SockJS('http://localhost:8080/ws');
     const stompClient = Stomp.over(socket);
     stompClient.connect({}, (frame) => {
       console.log('Connected: ' + frame);
@@ -50,15 +68,15 @@ const Topbar = () => {
         setOpenAlert(true)
       });
     });
-}, []);
+  }, []);
 
 
   return (
-    
+
     <Box display="flex" justifyContent="space-between" p={2}>
-      <Snackbar  
-        open={openAlert} 
-        onClose={handleCloseAlert} 
+      <Snackbar
+        open={openAlert}
+        onClose={handleCloseAlert}
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         sx={{ width: '50%' }}>
         <PopupNotification
@@ -93,7 +111,7 @@ const Topbar = () => {
             <NotificationsOutlinedIcon />
           </Badge>
         </IconButton>
-        <BasicMenu open={open} anchorEl={anchorEl} handleClose={handleClose}/>
+        <BasicMenu open={open} anchorEl={anchorEl} handleClose={handleClose} />
 
         <IconButton>
           <SettingsOutlinedIcon />
